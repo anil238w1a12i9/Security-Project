@@ -24,7 +24,7 @@ function Dashboard() {
       const token = localStorage.getItem("token");
 
       const res = await axios.get(
-        "https://your-backend-name.onrender.com/api/auth/alerts",
+        "https://security-project-eyyg.onrender.com/api/auth/alerts",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -59,7 +59,7 @@ function Dashboard() {
       const token = localStorage.getItem("token");
 
       const res = await axios.get(
-        "https://your-backend-name.onrender.com/api/auth/analytics/failed-logins",
+        "https://security-project-eyyg.onrender.com/api/auth/analytics/failed-logins",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -87,7 +87,7 @@ function Dashboard() {
       const token = localStorage.getItem("token");
 
       const response = await axios.get(
-        "https://your-backend-name.onrender.com/api/auth/reports/export-alerts",
+        "https://security-project-eyyg.onrender.com/api/auth/reports/export-alerts",
         {
           headers: {
             Authorization: `Bearer ${token}`,

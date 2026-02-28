@@ -9,21 +9,27 @@ function Login() {
   const handleLogin = async () => {
     try {
       const res = await axios.post(
-        "https://your-backend-name.onrender.com/api/auth/login",
-        { email, password }
+        "https://security-project-eyyg.onrender.com/api/auth/login",
+        {
+          email,
+          password,
+        }
       );
 
+      // Save token
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("token", res.data.token);
+
+      // Redirect to dashboard
       window.location.href = "/dashboard";
+
     } catch (err) {
-  console.log(err);
-  setMessage(
-    err.response?.data?.message ||
-    err.message ||
-    "Login failed"
-  );
-}
+      console.log(err);
+      setMessage(
+        err.response?.data?.message ||
+        err.message ||
+        "Login failed"
+      );
+    }
   };
 
   return (
@@ -46,7 +52,7 @@ function Login() {
 
       <button onClick={handleLogin}>Login</button>
 
-      <p>{message}</p>
+      <p style={{ color: "red" }}>{message}</p>
     </div>
   );
 }
