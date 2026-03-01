@@ -1,5 +1,12 @@
 import { useState } from "react";
 import axios from "axios";
+import {
+  TextField,
+  Button,
+  Container,
+  Typography,
+  Paper
+} from "@mui/material";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -10,16 +17,10 @@ function Login() {
     try {
       const res = await axios.post(
         "https://security-project-eyyg.onrender.com/api/auth/login",
-        {
-          email,
-          password,
-        }
+        { email, password }
       );
 
-      // Save token
       localStorage.setItem("token", res.data.token);
-
-      // Redirect to dashboard
       window.location.href = "/dashboard";
 
     } catch (err) {
@@ -33,27 +34,42 @@ function Login() {
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "100px" }}>
-      <h2>Login</h2>
+    <Container maxWidth="sm" style={{ marginTop: "100px" }}>
+      <Paper elevation={6} style={{ padding: "40px" }}>
+        <Typography variant="h4" align="center" gutterBottom>
+          Security Dashboard Login
+        </Typography>
 
-      <input
-        type="email"
-        placeholder="Email"
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <br /><br />
+        <TextField
+          fullWidth
+          label="Email"
+          margin="normal"
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-      <input
-        type="password"
-        placeholder="Password"
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <br /><br />
+        <TextField
+          fullWidth
+          label="Password"
+          type="password"
+          margin="normal"
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-      <button onClick={handleLogin}>Login</button>
+        <Button
+          fullWidth
+          variant="contained"
+          color="primary"
+          style={{ marginTop: "20px" }}
+          onClick={handleLogin}
+        >
+          Login
+        </Button>
 
-      <p style={{ color: "red" }}>{message}</p>
-    </div>
+        <Typography color="error" align="center" style={{ marginTop: "10px" }}>
+          {message}
+        </Typography>
+      </Paper>
+    </Container>
   );
 }
 

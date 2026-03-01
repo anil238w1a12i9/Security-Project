@@ -1,24 +1,34 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import {
+  Container,
+  Typography,
+  Button,
+  Grid,
+  Card,
+  CardContent,
+  Paper,
+  Chip,
+  Switch,
+  FormControlLabel
+} from "@mui/material";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer
+} from "recharts";
 
 function Dashboard() {
-
   const [alerts, setAlerts] = useState([]);
-  const [stats, setStats] = useState({
-    total: 0,
-    high: 0,
-    resolved: 0,
-    failedLogins: 0
-  });
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     fetchAlerts();
-    fetchFailedLoginStats();
   }, []);
 
-  // ===============================
-  // FETCH ALERTS
-  // ===============================
   const fetchAlerts = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -26,175 +36,150 @@ function Dashboard() {
       const res = await axios.get(
         "https://security-project-eyyg.onrender.com/api/auth/alerts",
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` }
         }
       );
 
       setAlerts(res.data);
-
-      // CALCULATE STATS
-      const total = res.data.length;
-      const high = res.data.filter(a => a.severity === "high").length;
-      const resolved = res.data.filter(a => a.resolved === true).length;
-
-      setStats(prev => ({
-        ...prev,
-        total,
-        high,
-        resolved
-      }));
-
     } catch (error) {
-      console.error("Error fetching alerts:", error);
+      console.error(error);
     }
   };
 
-  // ===============================
-  // FETCH FAILED LOGIN ANALYTICS
-  // ===============================
-  const fetchFailedLoginStats = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const res = await axios.get(
-        "https://security-project-eyyg.onrender.com/api/auth/analytics/failed-logins",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const todayCount = res.data.length > 0 ? res.data[0].count : 0;
-
-      setStats(prev => ({
-        ...prev,
-        failedLogins: todayCount
-      }));
-
-    } catch (error) {
-      console.error("Error fetching analytics:", error);
-    }
-  };
-
-  // ===============================
-  // DOWNLOAD CSV
-  // ===============================
-  const handleDownloadCSV = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const response = await axios.get(
-        "https://security-project-eyyg.onrender.com/api/auth/reports/export-alerts",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          responseType: "blob",
-        }
-      );
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "alerts-report.csv");
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-    } catch (error) {
-      console.error("Download failed:", error);
-    }
-  };
-
-  // ===============================
-  // LOGOUT
-  // ===============================
   const handleLogout = () => {
     localStorage.removeItem("token");
     window.location.href = "/";
   };
 
+  const totalAlerts = alerts.length;
+  const highSeverity = alerts.filter(a => a.severity === "high").length;
+  const resolved = alerts.filter(a => a.resolved).length;
+  const unresolved = totalAlerts - resolved;
+
+  const chartData = [
+    { name: "High", value: highSeverity },
+    { name: "Resolved", value: resolved },
+    { name: "Unresolved", value: unresolved }
+  ];
+
+  const backgroundColor = darkMode ? "#121212" : "#f5f5f5";
+  const textColor = darkMode ? "#ffffff" : "#000000";
+
   return (
-    <div style={{ padding: "40px", fontFamily: "Arial" }}>
+    <div style={{ background: backgroundColor, minHeight: "100vh", padding: "30px" }}>
+      <Container maxWidth="lg">
 
-      {/* HEADER */}
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "30px" }}>
-        <h1>Security Dashboard</h1>
-        <div>
-          <button onClick={handleDownloadCSV} style={{ marginRight: "10px" }}>
-            Download Report
-          </button>
-          <button onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
-      </div>
+        {/* HEADER */}
+        <Grid container justifyContent="space-between" alignItems="center">
+          <Typography variant="h4" style={{ color: textColor }}>
+            Advanced Security Dashboard
+          </Typography>
 
-      {/* ===============================
-          STATS CARDS
-      =============================== */}
-      <div style={{ display: "flex", gap: "20px", marginBottom: "30px" }}>
+          <div>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={darkMode}
+                  onChange={() => setDarkMode(!darkMode)}
+                />
+              }
+              label="Dark Mode"
+              style={{ color: textColor }}
+            />
 
-        <div style={cardStyle}>
-          <h3>Total Alerts</h3>
-          <p>{stats.total}</p>
-        </div>
-
-        <div style={{ ...cardStyle, backgroundColor: "#ffe6e6" }}>
-          <h3>High Severity</h3>
-          <p>{stats.high}</p>
-        </div>
-
-        <div style={{ ...cardStyle, backgroundColor: "#e6ffe6" }}>
-          <h3>Resolved</h3>
-          <p>{stats.resolved}</p>
-        </div>
-
-        <div style={{ ...cardStyle, backgroundColor: "#fff5cc" }}>
-          <h3>Failed Logins (Today)</h3>
-          <p>{stats.failedLogins}</p>
-        </div>
-
-      </div>
-
-      {/* ALERT LIST */}
-      <h2>Alerts</h2>
-
-      {alerts.length === 0 ? (
-        <p>No alerts found</p>
-      ) : (
-        alerts.map(alert => (
-          <div key={alert._id} style={alertCardStyle}>
-            <p><strong>Reason:</strong> {alert.reason}</p>
-            <p><strong>Severity:</strong> {alert.severity}</p>
-            <p><strong>Resolved:</strong> {alert.resolved ? "Yes" : "No"}</p>
-            <p><strong>Date:</strong> {new Date(alert.createdAt).toLocaleString()}</p>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
           </div>
-        ))
-      )}
+        </Grid>
 
+        {/* STAT CARDS */}
+        <Grid container spacing={3} style={{ marginTop: "30px" }}>
+          <Grid item xs={12} md={4}>
+            <Card style={{ transition: "0.3s", transform: "scale(1.02)" }}>
+              <CardContent>
+                <Typography variant="h6">Total Alerts</Typography>
+                <Typography variant="h4">{totalAlerts}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6">High Severity</Typography>
+                <Typography variant="h4" color="error">
+                  {highSeverity}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6">Resolved</Typography>
+                <Typography variant="h4" color="success.main">
+                  {resolved}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+        {/* CHART SECTION */}
+        <Paper style={{ marginTop: "40px", padding: "20px" }}>
+          <Typography variant="h6" gutterBottom>
+            Alert Analytics
+          </Typography>
+
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartData}>
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="value" fill="#1976d2" />
+            </BarChart>
+          </ResponsiveContainer>
+        </Paper>
+
+        {/* ALERT LIST */}
+        <Paper style={{ marginTop: "40px", padding: "20px" }}>
+          <Typography variant="h6" gutterBottom>
+            Recent Alerts
+          </Typography>
+
+          {alerts.map(alert => (
+            <Card key={alert._id} style={{ marginBottom: "15px" }}>
+              <CardContent>
+                <Typography>{alert.reason}</Typography>
+
+                <Chip
+                  label={alert.severity}
+                  color={alert.severity === "high" ? "error" : "warning"}
+                  style={{ marginRight: "10px" }}
+                />
+
+                <Chip
+                  label={alert.resolved ? "Resolved" : "Pending"}
+                  color={alert.resolved ? "success" : "warning"}
+                />
+              </CardContent>
+            </Card>
+          ))}
+
+          {alerts.length === 0 && (
+            <Typography align="center">No alerts available</Typography>
+          )}
+        </Paper>
+
+      </Container>
     </div>
   );
 }
-
-const cardStyle = {
-  padding: "20px",
-  border: "1px solid #ccc",
-  borderRadius: "8px",
-  width: "200px",
-  textAlign: "center",
-  backgroundColor: "#f2f2f2"
-};
-
-const alertCardStyle = {
-  border: "1px solid red",
-  padding: "15px",
-  marginBottom: "15px",
-  borderRadius: "5px",
-  backgroundColor: "#ffe6e6"
-};
 
 export default Dashboard;
