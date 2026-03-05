@@ -1,185 +1,276 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import {
-  Container,
-  Typography,
-  Button,
-  Grid,
-  Card,
-  CardContent,
-  Paper,
-  Chip,
-  Switch,
-  FormControlLabel
-} from "@mui/material";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer
-} from "recharts";
 
 function Dashboard() {
-  const [alerts, setAlerts] = useState([]);
-  const [darkMode, setDarkMode] = useState(false);
 
-  useEffect(() => {
-    fetchAlerts();
-  }, []);
+const [alerts,setAlerts] = useState([]);
+const [logs,setLogs] = useState([]);
+const [loading,setLoading] = useState(true);
+const [error,setError] = useState("");
 
-  const fetchAlerts = async () => {
-    try {
-      const token = localStorage.getItem("token");
+const token = localStorage.getItem("token");
 
-      const res = await axios.get(
-        "https://security-project-eyyg.onrender.com/api/auth/alerts",
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+const API = "https://security-project-eyyg.onrender.com";
 
-      setAlerts(res.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+const fetchAlerts = async () => {
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    window.location.href = "/";
-  };
+try{
 
-  const totalAlerts = alerts.length;
-  const highSeverity = alerts.filter(a => a.severity === "high").length;
-  const resolved = alerts.filter(a => a.resolved).length;
-  const unresolved = totalAlerts - resolved;
+const res = await axios.get(`${API}/api/auth/alerts`,{
+headers:{Authorization:`Bearer ${token}`}
+});
 
-  const chartData = [
-    { name: "High", value: highSeverity },
-    { name: "Resolved", value: resolved },
-    { name: "Unresolved", value: unresolved }
-  ];
+setAlerts(res.data);
 
-  const backgroundColor = darkMode ? "#121212" : "#f5f5f5";
-  const textColor = darkMode ? "#ffffff" : "#000000";
+}catch(err){
 
-  return (
-    <div style={{ background: backgroundColor, minHeight: "100vh", padding: "30px" }}>
-      <Container maxWidth="lg">
+setError("⚠ Could not fetch alerts");
 
-        {/* HEADER */}
-        <Grid container justifyContent="space-between" alignItems="center">
-          <Typography variant="h4" style={{ color: textColor }}>
-            Advanced Security Dashboard
-          </Typography>
-
-          <div>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={darkMode}
-                  onChange={() => setDarkMode(!darkMode)}
-                />
-              }
-              label="Dark Mode"
-              style={{ color: textColor }}
-            />
-
-            <Button
-              variant="contained"
-              color="error"
-              onClick={handleLogout}
-            >
-              Logout
-            </Button>
-          </div>
-        </Grid>
-
-        {/* STAT CARDS */}
-        <Grid container spacing={3} style={{ marginTop: "30px" }}>
-          <Grid item xs={12} md={4}>
-            <Card style={{ transition: "0.3s", transform: "scale(1.02)" }}>
-              <CardContent>
-                <Typography variant="h6">Total Alerts</Typography>
-                <Typography variant="h4">{totalAlerts}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">High Severity</Typography>
-                <Typography variant="h4" color="error">
-                  {highSeverity}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">Resolved</Typography>
-                <Typography variant="h4" color="success.main">
-                  {resolved}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-
-        {/* CHART SECTION */}
-        <Paper style={{ marginTop: "40px", padding: "20px" }}>
-          <Typography variant="h6" gutterBottom>
-            Alert Analytics
-          </Typography>
-
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill="#1976d2" />
-            </BarChart>
-          </ResponsiveContainer>
-        </Paper>
-
-        {/* ALERT LIST */}
-        <Paper style={{ marginTop: "40px", padding: "20px" }}>
-          <Typography variant="h6" gutterBottom>
-            Recent Alerts
-          </Typography>
-
-          {alerts.map(alert => (
-            <Card key={alert._id} style={{ marginBottom: "15px" }}>
-              <CardContent>
-                <Typography>{alert.reason}</Typography>
-
-                <Chip
-                  label={alert.severity}
-                  color={alert.severity === "high" ? "error" : "warning"}
-                  style={{ marginRight: "10px" }}
-                />
-
-                <Chip
-                  label={alert.resolved ? "Resolved" : "Pending"}
-                  color={alert.resolved ? "success" : "warning"}
-                />
-              </CardContent>
-            </Card>
-          ))}
-
-          {alerts.length === 0 && (
-            <Typography align="center">No alerts available</Typography>
-          )}
-        </Paper>
-
-      </Container>
-    </div>
-  );
 }
+
+};
+
+const fetchLogs = async () => {
+
+try{
+
+const res = await axios.get(`${API}/api/auth/activity`,{
+headers:{Authorization:`Bearer ${token}`}
+});
+
+setLogs(res.data);
+
+}catch(err){
+
+console.log(err);
+
+}
+
+};
+
+useEffect(()=>{
+
+if(!token){
+
+window.location.href="/";
+return;
+
+}
+
+async function load(){
+
+await fetchAlerts();
+await fetchLogs();
+
+setLoading(false);
+
+}
+
+load();
+
+},[]);
+
+
+const logout = ()=>{
+
+localStorage.removeItem("token");
+window.location.href="/";
+
+};
+
+
+if(loading){
+
+return(
+
+<div style={styles.loading}>
+
+<h2>🔍 Scanning the cyber universe...</h2>
+<p>Hackers are running away 🏃‍♂️</p>
+
+</div>
+
+);
+
+}
+
+
+return(
+
+<div style={styles.page}>
+
+<header style={styles.header}>
+
+<h1>🛡 Security Dashboard</h1>
+
+<button style={styles.logout} onClick={logout}>
+Logout
+</button>
+
+</header>
+
+
+<div style={styles.grid}>
+
+<div style={styles.card}>
+
+<h2>🚨 Security Alerts</h2>
+
+{alerts.length===0 ? (
+
+<p>No alerts. Hackers are sleeping 😴</p>
+
+):(
+
+<table style={styles.table}>
+
+<thead>
+<tr>
+<th>Type</th>
+<th>Severity</th>
+<th>Time</th>
+</tr>
+</thead>
+
+<tbody>
+
+{alerts.map((a,i)=>(
+
+<tr key={i}>
+
+<td>{a.type}</td>
+<td>{a.severity}</td>
+<td>{new Date(a.createdAt).toLocaleString()}</td>
+
+</tr>
+
+))}
+
+</tbody>
+
+</table>
+
+)}
+
+</div>
+
+
+
+<div style={styles.card}>
+
+<h2>📜 Activity Logs</h2>
+
+{logs.length===0 ?(
+
+<p>No activity logs</p>
+
+):(
+
+<ul style={styles.logs}>
+
+{logs.map((l,i)=>(
+
+<li key={i}>
+
+<strong>{l.action}</strong>
+
+<br/>
+
+<span>{new Date(l.createdAt).toLocaleString()}</span>
+
+</li>
+
+))}
+
+</ul>
+
+)}
+
+</div>
+
+
+</div>
+
+
+<footer style={styles.footer}>
+
+<p>Cyber Security Level: 🔥 MAXIMUM</p>
+
+<p>Remember: Never trust free WiFi 😆</p>
+
+</footer>
+
+</div>
+
+);
+
+}
+
+const styles = {
+
+page:{
+fontFamily:"Arial",
+background:"linear-gradient(135deg,#141e30,#243b55)",
+minHeight:"100vh",
+color:"white",
+padding:"20px"
+},
+
+header:{
+display:"flex",
+justifyContent:"space-between",
+alignItems:"center",
+marginBottom:"30px"
+},
+
+logout:{
+padding:"10px 20px",
+background:"#ff4b5c",
+border:"none",
+color:"white",
+borderRadius:"6px",
+cursor:"pointer"
+},
+
+grid:{
+display:"grid",
+gridTemplateColumns:"1fr 1fr",
+gap:"20px"
+},
+
+card:{
+background:"#1f2937",
+padding:"20px",
+borderRadius:"10px",
+boxShadow:"0 10px 20px rgba(0,0,0,0.4)"
+},
+
+table:{
+width:"100%",
+marginTop:"10px",
+borderCollapse:"collapse"
+},
+
+logs:{
+listStyle:"none",
+padding:"0"
+},
+
+footer:{
+marginTop:"40px",
+textAlign:"center",
+opacity:"0.8"
+},
+
+loading:{
+display:"flex",
+flexDirection:"column",
+justifyContent:"center",
+alignItems:"center",
+height:"100vh",
+fontSize:"22px"
+}
+
+};
 
 export default Dashboard;
