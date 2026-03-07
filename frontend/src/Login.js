@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { GoogleLogin } from "@react-oauth/google";
+import { Link } from "react-router-dom";
 
 function Login() {
 
@@ -8,14 +9,15 @@ const [email,setEmail]=useState("");
 const [password,setPassword]=useState("");
 const [message,setMessage]=useState("");
 
-const handleLogin = async () => {
+const API="https://security-project-eyyg.onrender.com";
+
+const handleLogin=async()=>{
 
 try{
 
-const res = await axios.post(
-"https://security-project-eyyg.onrender.com/api/auth/login",
-{email,password}
-);
+const res=await axios.post(`${API}/api/auth/login`,{
+email,password
+});
 
 localStorage.setItem("token",res.data.token);
 
@@ -23,20 +25,19 @@ window.location.href="/dashboard";
 
 }catch(err){
 
-setMessage("🚨 Wrong credentials! Even hackers get it wrong sometimes.");
+setMessage("🚨 Wrong password! Hackers fail too 😅");
 
 }
 
 };
 
-const handleGoogleLogin = async (credentialResponse)=>{
+const handleGoogleLogin=async(response)=>{
 
 try{
 
-const res = await axios.post(
-"https://security-project-eyyg.onrender.com/api/auth/google",
-{token:credentialResponse.credential}
-);
+const res=await axios.post(`${API}/api/auth/google`,{
+token:response.credential
+});
 
 localStorage.setItem("token",res.data.token);
 
@@ -56,9 +57,9 @@ return(
 
 <div style={styles.card}>
 
-<h1>🔐 Security Dashboard</h1>
+<h1>🛡 Cyber Security Portal</h1>
 
-<p style={{color:"#888"}}>Only legends can login here</p>
+<p style={{color:"#777"}}>Only certified legends allowed</p>
 
 <input
 style={styles.input}
@@ -67,8 +68,8 @@ onChange={(e)=>setEmail(e.target.value)}
 />
 
 <input
-type="password"
 style={styles.input}
+type="password"
 placeholder="Password"
 onChange={(e)=>setPassword(e.target.value)}
 />
@@ -81,12 +82,12 @@ Login
 
 <GoogleLogin
 onSuccess={handleGoogleLogin}
-onError={()=>setMessage("Google Login Failed")}
+onError={()=>setMessage("Google login failed")}
 />
 
 <br/>
 
-<a href="/signup">Create new account 🚀</a>
+<Link to="/signup">Create account 🚀</Link>
 
 <p style={{color:"red"}}>{message}</p>
 
@@ -98,7 +99,7 @@ onError={()=>setMessage("Google Login Failed")}
 
 }
 
-const styles = {
+const styles={
 
 page:{
 display:"flex",

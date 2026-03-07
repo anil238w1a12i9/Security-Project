@@ -1,154 +1,147 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import {useEffect,useState} from "react"
+import axios from "axios"
+import "./dashboard.css"
+import Matrix from "react-matrix-effect"
 
-function Dashboard() {
+<Matrix />
+function Dashboard(){
 
-const [alerts,setAlerts] = useState([]);
-const [logs,setLogs] = useState([]);
-const [loading,setLoading] = useState(true);
-const [error,setError] = useState("");
+const [alerts,setAlerts]=useState([])
+const [logs,setLogs]=useState([])
+const [terminalText,setTerminalText]=useState("")
 
-const token = localStorage.getItem("token");
+const token = localStorage.getItem("token")
 
-const API = "https://security-project-eyyg.onrender.com";
+const API="https://security-project-eyyg.onrender.com"
 
-const fetchAlerts = async () => {
+useEffect(()=>{
+
+fetchAlerts()
+fetchLogs()
+
+terminalAnimation()
+
+},[])
+
+
+const terminalAnimation = () => {
+
+const text = "Initializing cyber defense system..."
+let i=0
+
+const interval=setInterval(()=>{
+
+setTerminalText(text.substring(0,i))
+i++
+
+if(i>text.length){
+clearInterval(interval)
+}
+
+},50)
+
+}
+
+
+const fetchAlerts = async()=>{
 
 try{
 
 const res = await axios.get(`${API}/api/auth/alerts`,{
 headers:{Authorization:`Bearer ${token}`}
-});
+})
 
-setAlerts(res.data);
+setAlerts(res.data)
 
 }catch(err){
 
-setError("⚠ Could not fetch alerts");
+console.log(err)
 
 }
 
-};
+}
 
-const fetchLogs = async () => {
+
+const fetchLogs = async()=>{
 
 try{
 
 const res = await axios.get(`${API}/api/auth/activity`,{
 headers:{Authorization:`Bearer ${token}`}
-});
+})
 
-setLogs(res.data);
+setLogs(res.data)
 
 }catch(err){
 
-console.log(err);
+console.log(err)
 
 }
 
-};
-
-useEffect(()=>{
-
-if(!token){
-
-window.location.href="/";
-return;
-
 }
-
-async function load(){
-
-await fetchAlerts();
-await fetchLogs();
-
-setLoading(false);
-
-}
-
-load();
-
-},[]);
 
 
 const logout = ()=>{
 
-localStorage.removeItem("token");
-window.location.href="/";
-
-};
-
-
-if(loading){
-
-return(
-
-<div style={styles.loading}>
-
-<h2>🔍 Scanning the cyber universe...</h2>
-<p>Hackers are running away 🏃‍♂️</p>
-
-</div>
-
-);
+localStorage.removeItem("token")
+window.location.href="/"
 
 }
 
 
 return(
 
-<div style={styles.page}>
+<div className="dashboard-container">
 
-<header style={styles.header}>
 
-<h1>🛡 Security Dashboard</h1>
+<div className="header">
 
-<button style={styles.logout} onClick={logout}>
+<h1 className="title">🛡 CYBER DEFENSE CENTER</h1>
+
+<button className="logout-btn" onClick={logout}>
 Logout
 </button>
 
-</header>
+</div>
 
 
-<div style={styles.grid}>
+<div className="terminal">
 
-<div style={styles.card}>
+<p className="typing">{terminalText}</p>
+
+<p>Scanning network...</p>
+<p>Detecting intrusions...</p>
+<p>Hackers detected: 0 😎</p>
+
+</div>
+
+
+
+<div className="grid">
+
+<div className="card">
 
 <h2>🚨 Security Alerts</h2>
 
-{alerts.length===0 ? (
-
-<p>No alerts. Hackers are sleeping 😴</p>
-
+{alerts.length===0?(
+<p>No alerts. System secure.</p>
 ):(
 
-<table style={styles.table}>
+alerts.map((a,i)=>(
+<div key={i} className="log-item">
 
-<thead>
-<tr>
-<th>Type</th>
-<th>Severity</th>
-<th>Time</th>
-</tr>
-</thead>
+<strong>{a.type}</strong>
 
-<tbody>
+<br/>
 
-{alerts.map((a,i)=>(
+Severity: {a.severity}
 
-<tr key={i}>
+<br/>
 
-<td>{a.type}</td>
-<td>{a.severity}</td>
-<td>{new Date(a.createdAt).toLocaleString()}</td>
+{new Date(a.createdAt).toLocaleString()}
 
-</tr>
-
-))}
-
-</tbody>
-
-</table>
+</div>
+))
 
 )}
 
@@ -156,121 +149,37 @@ Logout
 
 
 
-<div style={styles.card}>
+<div className="card">
 
 <h2>📜 Activity Logs</h2>
 
-{logs.length===0 ?(
-
+{logs.length===0?(
 <p>No activity logs</p>
-
 ):(
 
-<ul style={styles.logs}>
-
-{logs.map((l,i)=>(
-
-<li key={i}>
+logs.map((l,i)=>(
+<div key={i} className="log-item">
 
 <strong>{l.action}</strong>
 
 <br/>
 
-<span>{new Date(l.createdAt).toLocaleString()}</span>
+{new Date(l.createdAt).toLocaleString()}
 
-</li>
-
-))}
-
-</ul>
+</div>
+))
 
 )}
 
 </div>
 
-
 </div>
 
 
-<footer style={styles.footer}>
-
-<p>Cyber Security Level: 🔥 MAXIMUM</p>
-
-<p>Remember: Never trust free WiFi 😆</p>
-
-</footer>
-
 </div>
 
-);
+)
 
 }
 
-const styles = {
-
-page:{
-fontFamily:"Arial",
-background:"linear-gradient(135deg,#141e30,#243b55)",
-minHeight:"100vh",
-color:"white",
-padding:"20px"
-},
-
-header:{
-display:"flex",
-justifyContent:"space-between",
-alignItems:"center",
-marginBottom:"30px"
-},
-
-logout:{
-padding:"10px 20px",
-background:"#ff4b5c",
-border:"none",
-color:"white",
-borderRadius:"6px",
-cursor:"pointer"
-},
-
-grid:{
-display:"grid",
-gridTemplateColumns:"1fr 1fr",
-gap:"20px"
-},
-
-card:{
-background:"#1f2937",
-padding:"20px",
-borderRadius:"10px",
-boxShadow:"0 10px 20px rgba(0,0,0,0.4)"
-},
-
-table:{
-width:"100%",
-marginTop:"10px",
-borderCollapse:"collapse"
-},
-
-logs:{
-listStyle:"none",
-padding:"0"
-},
-
-footer:{
-marginTop:"40px",
-textAlign:"center",
-opacity:"0.8"
-},
-
-loading:{
-display:"flex",
-flexDirection:"column",
-justifyContent:"center",
-alignItems:"center",
-height:"100vh",
-fontSize:"22px"
-}
-
-};
-
-export default Dashboard;
+export default Dashboard

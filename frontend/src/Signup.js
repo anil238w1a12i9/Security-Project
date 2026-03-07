@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { GoogleLogin } from "@react-oauth/google";
+import { Link } from "react-router-dom";
 
 function Signup(){
 
@@ -9,33 +10,33 @@ const [email,setEmail]=useState("");
 const [password,setPassword]=useState("");
 const [message,setMessage]=useState("");
 
-const handleSignup = async ()=>{
+const API="https://security-project-eyyg.onrender.com";
+
+const handleSignup=async()=>{
 
 try{
 
-await axios.post(
-"https://security-project-eyyg.onrender.com/api/auth/signup",
-{name,email,password}
-);
+await axios.post(`${API}/api/auth/signup`,{
+name,email,password
+});
 
-setMessage("🎉 Account created! Now login and save the world.");
+setMessage("🎉 Account created! Now login and save the internet.");
 
 }catch(err){
 
-setMessage("Signup failed 😢");
+setMessage("Signup failed");
 
 }
 
 };
 
-const handleGoogleSignup = async (credentialResponse)=>{
+const handleGoogleSignup=async(response)=>{
 
 try{
 
-const res = await axios.post(
-"https://security-project-eyyg.onrender.com/api/auth/google",
-{token:credentialResponse.credential}
-);
+const res=await axios.post(`${API}/api/auth/google`,{
+token:response.credential
+});
 
 localStorage.setItem("token",res.data.token);
 
@@ -70,8 +71,8 @@ onChange={(e)=>setEmail(e.target.value)}
 />
 
 <input
-type="password"
 style={styles.input}
+type="password"
 placeholder="Password"
 onChange={(e)=>setPassword(e.target.value)}
 />
@@ -89,7 +90,7 @@ onError={()=>setMessage("Google signup failed")}
 
 <br/>
 
-<a href="/">Back to login</a>
+<Link to="/">Back to login</Link>
 
 <p style={{color:"red"}}>{message}</p>
 
@@ -101,7 +102,7 @@ onError={()=>setMessage("Google signup failed")}
 
 }
 
-const styles = {
+const styles={
 
 page:{
 display:"flex",
